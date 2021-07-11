@@ -21,6 +21,9 @@ public class CameraPlugin: CAPPlugin, CAPBridgedPlugin {
     private let defaultDirection = CameraDirection.rear
     private var multiple = false
 
+    private var currentLocation = CLLocation()
+    private var currentHeading = CLHeading()
+
     private var imageCounter = 0
 
     @objc override public func checkPermissions(_ call: CAPPluginCall) {
@@ -378,6 +381,31 @@ private extension CameraPlugin {
     }
 
     func showPrompt() {
+        Locator.shared.authorize();
+        Locator.shared.getLocation { result in
+            print("Location Result: \(String(describing: result))")
+            switch result {
+                case Locator.Result.Success(let locator):
+                    if let location = locator.location {
+                        self.currentLocation = location
+                    }
+                case Locator.Result.Failure(let error):
+                    print(error)
+            }
+         }
+        
+        Locator.shared.getHeading { result in
+            print("Heading Result: \(String(describing: result))")
+            switch result {
+                case Locator.Result.Success(let locator):
+                    if let heading = locator.heading {
+                        self.currentHeading = heading
+                    }
+                case Locator.Result.Failure(let error):
+                    print(error)
+            }
+         }
+
         // Build the action sheet
         let alert = UIAlertController(title: settings.userPromptText.title, message: nil, preferredStyle: UIAlertController.Style.actionSheet)
         alert.addAction(UIAlertAction(title: settings.userPromptText.photoAction, style: .default, handler: { [weak self] (_: UIAlertAction) in
@@ -531,6 +559,11 @@ private extension CameraPlugin {
         if let asset = info[UIImagePickerController.InfoKey.phAsset] as? PHAsset {
             metadata = asset.imageData
         }
+
+        metadata[kCGImagePropertyGPSDictionary as String] = self.currentLocation.exifMetadata(heading: self.currentHeading)
+
+        print("Meta Data: \(String(describing: metadata))")
+        
         // get the result
         var result = processedImage(from: image, with: metadata)
         result.flags = flags
