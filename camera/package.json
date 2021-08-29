@@ -13,7 +13,7 @@
     "ios/Sources",
     "ios/Tests",
     "Package.swift",
-    "CapacitorCamera.podspec"
+    "WatchdutyCamera.podspec"
   ],
   "author": "Ionic <hi@ionicframework.com>",
   "license": "MIT",
