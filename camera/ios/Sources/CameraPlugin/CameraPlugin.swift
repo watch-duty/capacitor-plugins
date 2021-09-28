@@ -21,8 +21,8 @@ public class CameraPlugin: CAPPlugin, CAPBridgedPlugin {
     private let defaultDirection = CameraDirection.rear
     private var multiple = false
 
-    private var currentLocation = CLLocation()
-    private var currentHeading = CLHeading()
+    private var currentLocation: CLLocation? = nil
+    private var currentHeading: CLHeading? = nil
 
     private var imageCounter = 0
 
@@ -381,6 +381,24 @@ private extension CameraPlugin {
     }
 
     func showPrompt() {
+        // Build the action sheet
+        let alert = UIAlertController(title: settings.userPromptText.title, message: nil, preferredStyle: UIAlertController.Style.actionSheet)
+        alert.addAction(UIAlertAction(title: settings.userPromptText.photoAction, style: .default, handler: { [weak self] (_: UIAlertAction) in
+            self?.showPhotos()
+        }))
+
+        alert.addAction(UIAlertAction(title: settings.userPromptText.cameraAction, style: .default, handler: { [weak self] (_: UIAlertAction) in
+            self?.showCamera()
+        }))
+
+        alert.addAction(UIAlertAction(title: settings.userPromptText.cancelAction, style: .cancel, handler: { [weak self] (_: UIAlertAction) in
+            self?.call?.reject("User cancelled photos app")
+        }))
+        self.setCenteredPopover(alert)
+        self.bridge?.viewController?.present(alert, animated: true, completion: nil)
+    }
+
+    func showCamera() {
         Locator.shared.authorize()
         Locator.shared.getLocation { result in
             print("Location Result: \(String(describing: result))")
@@ -404,26 +422,8 @@ private extension CameraPlugin {
                 case Locator.Result.Failure(let error):
                     print(error)
             }
-         }
+        }
 
-        // Build the action sheet
-        let alert = UIAlertController(title: settings.userPromptText.title, message: nil, preferredStyle: UIAlertController.Style.actionSheet)
-        alert.addAction(UIAlertAction(title: settings.userPromptText.photoAction, style: .default, handler: { [weak self] (_: UIAlertAction) in
-            self?.showPhotos()
-        }))
-
-        alert.addAction(UIAlertAction(title: settings.userPromptText.cameraAction, style: .default, handler: { [weak self] (_: UIAlertAction) in
-            self?.showCamera()
-        }))
-
-        alert.addAction(UIAlertAction(title: settings.userPromptText.cancelAction, style: .cancel, handler: { [weak self] (_: UIAlertAction) in
-            self?.call?.reject("User cancelled photos app")
-        }))
-        self.setCenteredPopover(alert)
-        self.bridge?.viewController?.present(alert, animated: true, completion: nil)
-    }
-
-    func showCamera() {
         // check if we have a camera
         if (bridge?.isSimEnvironment ?? false) || !UIImagePickerController.isSourceTypeAvailable(UIImagePickerController.SourceType.camera) {
             CAPLog.print("⚡️ ", self.pluginId, "-", "Camera not available in simulator")
@@ -560,7 +560,9 @@ private extension CameraPlugin {
             metadata = asset.imageData
         }
 
-        metadata[kCGImagePropertyGPSDictionary as String] = self.currentLocation.exifMetadata(heading: self.currentHeading)
+        if let currentLocation = self.currentLocation {
+            metadata[kCGImagePropertyGPSDictionary as String] = currentLocation.exifMetadata(heading: self.currentHeading)
+        }
 
         print("Meta Data: \(String(describing: metadata))")
 
