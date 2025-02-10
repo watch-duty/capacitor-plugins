@@ -13,25 +13,24 @@ This fork contains various changes made by the Watch Duty team to the Camera plu
 To implement a minor version change, simply merge the change into our branch:
 
 ```sh
-# Update main
-git checkout main
+# Add the upstream origin if not done already:
+git remote add upstream git@github.com:ionic-team/capacitor-plugins.git
+
+# Fetch lastest changes from Capacitor
 git fetch upstream
-git merge upstream/master
 
 # Update our branch
 git checkout watchduty-17.x
-git merge main
+git merge upstream/main
 ```
 
 When a major version is released, create a new branch from `main` and cherry-pick our customization onto that branch:
 
 ```sh
-# Update main
-git checkout main
-git fetch upstream
-git merge upstream/master
 
 # Create new version branch for forked changes
+git fetch upstream
+git checkout upstream/main
 git checkout -b watchduty-8.x
 
 # Get a list of commits to apply to this branch
