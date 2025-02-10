@@ -1,6 +1,58 @@
 # Capacitor Plugins
 
+
 This repository contains the official Capacitor plugins maintained by the Capacitor team. You can find more plugins in the [Capacitor Community](https://github.com/capacitor-community/).
+
+## Watch Duty Fork
+
+This fork contains various changes made by the Watch Duty team to the Camera plugin. To manage this, commits are cherry-picked onto a new branch for each upstream major version change. `main` should always match Capacitor's upstream version of `main`.
+
+> [!IMPORTANT]
+> Check to see if Capacitor has their own major version branch like `17.x`. Sometimes they do, and other times they just use `main`. The examples below use `main` as the upstream branch example.
+
+To implement a minor version change, simply merge the change into our branch:
+
+```sh
+# Update main
+git checkout main
+git fetch upstream
+git merge upstream/master
+
+# Update our branch
+git checkout watchduty-17.x
+git merge main
+```
+
+When a major version is released, create a new branch from `main` and cherry-pick our customization onto that branch:
+
+```sh
+# Update main
+git checkout main
+git fetch upstream
+git merge upstream/master
+
+# Create new version branch for forked changes
+git checkout -b watchduty-8.x
+
+# Get a list of commits to apply to this branch
+git log upstream/main..watchduty-7.x --reverse
+
+# For each commit returned, apply that to the new branch
+git cherry-pick <sha>
+
+git push -u origin HEAD
+```
+
+Then, publish the changes to NPM:
+
+```sh
+cd camera/
+npm install
+npm publish
+
+# You can confirm it published by checking:
+npm info @watchduty/camera
+```
 
 > ### :rotating_light: These plugins are for Capacitor 8 :rotating_light:
 >
